@@ -1,6 +1,6 @@
 [package]
 name = "alphametic"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["William Gulian <williamgulian@gmail.com>"]
 
 [dependencies]
