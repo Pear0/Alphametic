@@ -6,57 +6,11 @@ use std::collections::HashMap;
 use std::env;
 use std::ascii::AsciiExt;
 
-struct Permutation {
-    elements: Vec<usize>,
-    swappings: Vec<usize>,
-    valid: bool
-}
+mod alphametic;
+mod permutation;
+mod brute;
 
-impl Iterator for Permutation {
-    type Item = Vec<usize>;
-    
-    fn next(&mut self) -> Option<Vec<usize>> {
-        if !self.valid {
-            return None
-        }
-        
-        let res = self.elements
-            .iter()
-            .take(self.swappings.len())
-            .map(|n| n.clone())
-            .collect::<Vec<_>>();
-        
-        let mut i: isize = self.swappings.len() as isize - 1;
-        
-        while i >= 0 && self.swappings[i as usize] == self.elements.len() - 1 {
-            self.elements.swap(i as usize, self.swappings[i as usize]);
-            self.swappings[i as usize] = i as usize;
-            i -= 1;
-        }
-        
-        
-        if i < 0 {
-            self.valid = false
-        }else {
-            let prev = self.swappings[i as usize];
-            self.elements.swap(i as usize, prev);
-            let next = prev + 1;
-            self.swappings[i as usize] = next;
-            self.elements.swap(i as usize, next);
-        }
-        
-        Some(res)
-    }
-    
-}
-
-fn permutation(elements: &Vec<usize>, num: usize) -> Permutation {
-    Permutation {
-        elements: elements.clone(), 
-        swappings: (0..num).collect::<Vec<_>>(),
-        valid: true
-    }
-}
+use permutation::Permutation;
 
 fn str_to_num(word: &Vec<char>, map: &HashMap<char, usize>) -> Option<usize> {
     let mut acc = 0;
@@ -88,6 +42,19 @@ fn print_perm_map(terms: &Vec<Vec<char>>, sum: &Vec<char>, map: &HashMap<char, u
         terms.iter().map(|t| t.iter().map(|k| numbers[map.get(k).unwrap().clone()].clone()).collect::<String>()).collect::<Vec<_>>().join(" + "), 
         sum.iter().map(|k| numbers[map.get(k).unwrap().clone()].clone()).collect::<String>());
     
+}
+
+fn print_perm_map2(terms: &Vec<&str>, sum: &str, map: &HashMap<char, usize>) {
+    let numbers = "0123456789".chars().collect::<Vec<_>>();
+
+    println!("{} = {}",
+             terms.join(" + "),
+             sum);
+
+    println!("{} = {}",
+             terms.iter().map(|t| t.chars().map(|k| numbers[map.get(&k).unwrap().clone()].clone()).collect::<String>()).collect::<Vec<_>>().join(" + "),
+             sum.chars().map(|k| numbers[map.get(&k).unwrap().clone()].clone()).collect::<String>());
+
 }
 
 fn print_perm(terms: &Vec<Vec<char>>, sum: &Vec<char>, chars: &Vec<char>, perm: &Vec<usize>) {
@@ -126,10 +93,18 @@ fn main() {
     //];
     //let sum = "DEFENSE";
     
-    let terms = terms.iter().cloned().map(|s| s.chars().collect::<Vec<_>>()).collect::<Vec<_>>();
-    let sum = sum.clone().chars().collect::<Vec<_>>();
-    
-    let mut chars: Vec<char> = terms.iter().flat_map(|s| s.clone().into_iter()).collect();
+    //let terms = terms.iter().cloned().map(|s| s.chars().collect::<Vec<_>>()).collect::<Vec<_>>();
+    //let sum = sum.clone().chars().collect::<Vec<_>>();
+
+    let terms = terms.iter().map(AsRef::as_ref).collect();
+
+    alphametic::solve(&terms, &sum, &|map| {
+
+        print_perm_map2(&terms, &sum, &map);
+        println!();
+    });
+
+    /*let mut chars: Vec<char> = terms.iter().flat_map(|s| s.clone().into_iter()).collect();
     for c in &sum {
         chars.push(c.clone());
     }
@@ -147,7 +122,7 @@ fn main() {
         numbers.remove(if k > j {k - 1} else {k});
         
         thread::spawn(move || {
-            'outer: for perm in permutation(&numbers, chars.len() - 2) {
+            'outer: for perm in Permutation::new(&numbers, chars.len() - 2) {
                 let mut perm = perm;
                 perm.push(j);
                 perm.push(k);
@@ -189,11 +164,11 @@ fn main() {
         match rx.recv().unwrap() {
             Some(perm) => {
                 print_perm(&terms, &sum, &chars, &perm);
-                println!("");
+                println!();
             },
             None => i += 1
         }
-    }
+    }*/
     
     println!("Completed in {:.4}s", time::precise_time_s() - start_time);
     

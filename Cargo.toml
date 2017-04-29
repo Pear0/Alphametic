@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["William Gulian <williamgulian@gmail.com>"]
 
 [dependencies]
-num="0.1.27"
+num = "0.1.27"
 vec_map = "0.3.0"
 time = "0.1"
+crossbeam = "0.2.10"
