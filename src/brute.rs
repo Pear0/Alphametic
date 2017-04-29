@@ -13,13 +13,13 @@ fn num_permutations(n: usize, k: usize) -> usize {
     acc
 }
 
-pub fn parallel<M, T>(base: usize, thread_depth: usize, chars: &Vec<char>, matcher: &M, callback: &Fn(T))
-    where M: Fn(&HashMap<char, usize>) -> Option<T> + Send + Sync, T: Send {
+pub fn parallel<M, C, T>(base: usize, thread_depth: usize, chars: &Vec<char>, matcher: M, callback: C)
+    where M: Fn(&HashMap<char, usize>) -> Option<T> + Send + Sync, C: Fn(T) + Sized, T: Send {
 
     let digits: Vec<usize> = (0..base).collect();
     let thread_count = num_permutations(base, thread_depth);
 
-    println!("{:?} P {:?} = {:?}", base, thread_depth, thread_count);
+    let matcher = &matcher;
 
     crossbeam::scope(|scope| {
         let (tx, rx) = mpsc::channel::<Option<T>>();
@@ -40,14 +40,14 @@ pub fn parallel<M, T>(base: usize, thread_depth: usize, chars: &Vec<char>, match
 
                 let numbers = numbers;
 
+                let mut map: HashMap<char, usize> = HashMap::with_capacity(chars.len());
+
                 for mut perm in Permutation::new(&numbers, chars.len() - thread_depth) {
                     for j in &prefix {
                         perm.push(*j);
                     }
 
-                    //println!("{:?}", perm);
-
-                    let mut map: HashMap<char, usize> = HashMap::with_capacity(chars.len());
+                    map.clear();
                     for i in 0..chars.len() {
                         map.insert(chars[i], perm[i]);
                     }

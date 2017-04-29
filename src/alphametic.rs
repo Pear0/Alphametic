@@ -3,8 +3,6 @@ use std::collections::HashMap;
 
 use brute;
 
-use str_to_num;
-
 fn all_chars(terms: &Vec<&str>, sum: &str) -> Vec<char> {
     let mut chars: Vec<char> = terms.iter().flat_map(|s| s.chars()).collect();
     for c in sum.chars() {
@@ -14,6 +12,25 @@ fn all_chars(terms: &Vec<&str>, sum: &str) -> Vec<char> {
     chars.dedup();
 
     chars.into_iter().collect()
+}
+
+fn str_to_num(word: &Vec<char>, map: &HashMap<char, usize>) -> Option<usize> {
+    let mut acc = 0;
+    let mut mul = 1;
+
+    for i in (0..word.len()).rev() {
+
+        let digit = map.get(&word[i]).unwrap().clone();
+        if i == 0 && digit == 0 {
+            return None;
+        }
+
+        acc += mul * digit;
+        mul *= 10;
+
+    }
+
+    Some(acc)
 }
 
 fn matcher(terms: &Vec<&str>, sum: &str, map: &HashMap<char, usize>) -> Option<HashMap<char, usize>> {
@@ -43,12 +60,10 @@ fn matcher(terms: &Vec<&str>, sum: &str, map: &HashMap<char, usize>) -> Option<H
 
 }
 
-pub fn solve<F>(terms: &Vec<&str>, sum: &str, callback: &F) where F: Fn(HashMap<char, usize>) {
+pub fn solve<F>(terms: &Vec<&str>, sum: &str, callback: F) where F: Fn(HashMap<char, usize>) {
     let chars = all_chars(terms, sum);
 
-    println!("{:?}", chars);
-
     brute::parallel(10, 2, &chars,
-                    &|map| { matcher(terms, sum, map) },
+                    |map| { matcher(terms, sum, map) },
                     callback);
 }
